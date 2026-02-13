@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _DATE_HPP_
-#define _DATE_HPP_ "c++ 1.2.0"
+#ifndef _DF_DATE_HPP_
+#define _DF_DATE_HPP_ "c++ 1.2.1"
 
 
 
@@ -16,16 +16,31 @@
 
 
 
-constexpr size_t DATE_FORMATTING_BUFFER_LENGTH = 256;
-char DATE_FORMATTING_BUFFER[DATE_FORMATTING_BUFFER_LENGTH + 1] = {0};
+constexpr size_t DF_DATE_FORMATTING_BUFFER_LENGTH = 256;
+char DF_DATE_FORMATTING_BUFFER[DF_DATE_FORMATTING_BUFFER_LENGTH + 1] = {0};
+
+
+
+
+int df_strncasecmp(const char* s1, const char* s2, int n) {
+    int c1, c2;
+    const char* end = s1 + n;
+    while (s1 < end) {
+        c1 = tolower(*s1); c2 = tolower(*s2);
+
+        if (c1 != c2) {
+            return c1 - c2;
+        }
+        s1++; s2++;
+    }
+    return 0;
+}
 
 
 
 
 
-
-
-class interval_t {
+class df_interval_t {
 public:
     int years = 0, months = 0, days = 0;
     int hours = 0, minutes = 0, seconds = 0;
@@ -36,7 +51,7 @@ public:
 
 
 
-    interval_t(const char* fmt) {
+    df_interval_t(const char* fmt) {
         const char* p = fmt;
         int value = 0;
         int c = *p;
@@ -66,37 +81,37 @@ public:
                 continue;
             }
 
-            if (strncasecmp(p, "year", 4) == 0) {
+            if (df_strncasecmp(p, "year", 4) == 0) {
                 years = value;
                 p += 4;
                 continue;
             }
-            if (strncasecmp(p, "month", 5) == 0) {
+            if (df_strncasecmp(p, "month", 5) == 0) {
                 months = value;
                 p += 5;
                 continue;
             }
-            if (strncasecmp(p, "week", 4) == 0) {
+            if (df_strncasecmp(p, "week", 4) == 0) {
                 days += value * 7;
                 p += 4;
                 continue;
             }
-            if (strncasecmp(p, "day", 3) == 0) {
+            if (df_strncasecmp(p, "day", 3) == 0) {
                 days += value;
                 p += 3;
                 continue;
             }
-            if (strncasecmp(p, "hour", 4) == 0) {
+            if (df_strncasecmp(p, "hour", 4) == 0) {
                 hours += value;
                 p += 4;
                 continue;
             }
-            if (strncasecmp(p, "min", 3) == 0) {
+            if (df_strncasecmp(p, "min", 3) == 0) {
                 minutes += value;
                 p += 3;
                 goto label_fix_lessing;
             }
-            if (strncasecmp(p, "sec", 3) == 0) {
+            if (df_strncasecmp(p, "sec", 3) == 0) {
                 seconds = value;
                 p += 3;
                 continue;
@@ -134,9 +149,9 @@ public:
 
     // == formatting ==
     
-    const char* c_str(char* buffer = DATE_FORMATTING_BUFFER, size_t buffer_size = DATE_FORMATTING_BUFFER_LENGTH) const {
+    const char* c_str(char* buffer = DF_DATE_FORMATTING_BUFFER, size_t buffer_size = DF_DATE_FORMATTING_BUFFER_LENGTH) const {
         snprintf(buffer, buffer_size,
-            "interval_t(%d years, %d months, %d days, %d hours, %d mintues, %d seconds)",
+            "df_interval_t(%d years, %d months, %d days, %d hours, %d mintues, %d seconds)",
             years, months, days,
             hours, minutes, seconds
         );
@@ -150,7 +165,7 @@ public:
 
     // == std::cout ==
 
-    friend std::ostream& operator<<(std::ostream& stream, const interval_t interval) {
+    friend std::ostream& operator<<(std::ostream& stream, const df_interval_t interval) {
         return stream << interval.c_str();
     }
 };
@@ -158,7 +173,7 @@ public:
 
 
 
-class date_t {
+class df_date_t {
   time_t t;
 
 public:
@@ -169,7 +184,7 @@ public:
         constexpr static char MONTHS[12][12] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 
         for (int i = 0; i < 12; i++) {
-            if (strncasecmp(strmonth, MONTHS[i], n) == 0) {
+            if (df_strncasecmp(strmonth, MONTHS[i], n) == 0) {
                 *month = i;
                 return strlen(MONTHS[i]);
             }
@@ -182,7 +197,7 @@ public:
         constexpr static char WEEKDAYS[7][10] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 
         for (int i = 0; i < 7; i++) {
-            if (strncasecmp(strweek, WEEKDAYS[i], n) == 0) {
+            if (df_strncasecmp(strweek, WEEKDAYS[i], n) == 0) {
                 *week = i + 1;
                 return strlen(WEEKDAYS[i]);
             }
@@ -298,7 +313,7 @@ public:
                     temp = 2;
                     goto label_pass;
                 case 'p':
-                    if (strncasecmp(strdate, "PM", 2) == 0) {
+                    if (df_strncasecmp(strdate, "PM", 2) == 0) {
                         tm->tm_hour = (tm->tm_hour + 12) % 24;
                         strdate += 2;
                     }
@@ -313,29 +328,30 @@ public:
                     goto label_pass;
                 case 'f':
                     continue;   // micro seconds (unusable)
-                case 'Z':
-                    // symbol of time zone
-                    if (strncasecmp(strdate, "GMT", 3) == 0) {
-                        tm->tm_zone = "GMT";
-                        temp = 3;
-                        goto label_pass;
-                    }
-                    else if (strncasecmp(strdate, "CST", 3) == 0) {
-                        tm->tm_zone = "CST";
-                        temp = 3;
-                        goto label_pass;
-                    }
-                    else if (strncasecmp(strdate, "CEST", 4) == 0) {
-                        tm->tm_zone = "CEST";
-                        temp = 4;
-                        goto label_pass;
-                    }
-                    continue;
-                case 'z':
-                    sscanf(strdate, "%05ld", &tm->tm_gmtoff);
-                    tm->tm_gmtoff = (tm->tm_gmtoff / 100 * 3600) + (tm->tm_gmtoff % 100 * 60);
-                    temp = 5;
-                    goto label_pass;
+                // == cannot use in MCVS ==
+                // case 'Z':
+                //     // symbol of time zone
+                //     if (df_strncasecmp(strdate, "GMT", 3) == 0) {
+                //         tm->tm_zone = "GMT";
+                //         temp = 3;
+                //         goto label_pass;
+                //     }
+                //     else if (df_strncasecmp(strdate, "CST", 3) == 0) {
+                //         tm->tm_zone = "CST";
+                //         temp = 3;
+                //         goto label_pass;
+                //     }
+                //     else if (df_strncasecmp(strdate, "CEST", 4) == 0) {
+                //         tm->tm_zone = "CEST";
+                //         temp = 4;
+                //         goto label_pass;
+                //     }
+                //     continue;
+                // case 'z':
+                //     sscanf(strdate, "%05ld", &tm->tm_gmtoff);
+                //     tm->tm_gmtoff = (tm->tm_gmtoff / 100 * 3600) + (tm->tm_gmtoff % 100 * 60);
+                //     temp = 5;
+                //     goto label_pass;
                 case 'c':
                     strdate += parse_time(strdate, "%a %b %d %H:%M:%S %Y", tm);
                     continue;
@@ -367,18 +383,18 @@ public:
 
 
 
-    constexpr date_t(time_t t = 0) : t(t) {}
+    constexpr df_date_t(time_t t = 0) : t(t) {}
 
-    date_t(const char* strdate, const char* fmt = DEFAULT_FORMAT) {
+    df_date_t(const char* strdate, const char* fmt = DEFAULT_FORMAT) {
         parse_date(strdate, fmt);
     }
 
-    date_t(std::string& strdate, const char* fmt = DEFAULT_FORMAT) {
+    df_date_t(std::string& strdate, const char* fmt = DEFAULT_FORMAT) {
         parse_date(strdate.c_str(), fmt);
     }
 
 
-    date_t& parse_date(const char* strdate, const char* fmt = DEFAULT_FORMAT) {
+    df_date_t& parse_date(const char* strdate, const char* fmt = DEFAULT_FORMAT) {
         struct tm tm{};
         if (parse_time(strdate, fmt, &tm) == 0) {
             t = mktime(&tm);
@@ -387,7 +403,7 @@ public:
     }
 
 
-    date_t& operator=(const char* strdate) {
+    df_date_t& operator=(const char* strdate) {
         struct tm tm{};
         parse_time(strdate, DEFAULT_FORMAT, &tm);
         t = mktime(&tm);
@@ -396,12 +412,12 @@ public:
 
     // == interval ==
 
-    date_t& operator+=(time_t interval) {
+    df_date_t& operator+=(time_t interval) {
         t += interval;
         return *this;
     }
 
-    date_t& operator+(time_t interval) {
+    df_date_t& operator+(time_t interval) {
         t += interval;
         return *this;
     }
@@ -410,7 +426,7 @@ public:
     
 
 
-    date_t operator+(const interval_t& interval) const {
+    df_date_t operator+(const df_interval_t& interval) const {
         struct tm* tm = localtime(&t);
 
         struct tm dest{};
@@ -421,17 +437,17 @@ public:
         dest.tm_min = tm->tm_min + interval.minutes;
         dest.tm_sec = tm->tm_sec + interval.seconds;
 
-        return date_t(mktime(&dest));
+        return df_date_t(mktime(&dest));
     }
 
-    date_t& operator+=(const interval_t& interval) {
+    df_date_t& operator+=(const df_interval_t& interval) {
         *this = *this + interval;
         return *this;
     }
 
 
 
-    date_t operator-(const interval_t& interval) const {
+    df_date_t operator-(const df_interval_t& interval) const {
         struct tm* tm = localtime(&t);
 
         struct tm dest{};
@@ -442,10 +458,10 @@ public:
         dest.tm_min = tm->tm_min - interval.minutes;
         dest.tm_sec = tm->tm_sec - interval.seconds;
 
-        return date_t(mktime(&dest));
+        return df_date_t(mktime(&dest));
     }
 
-    date_t& operator-=(const interval_t& interval) {
+    df_date_t& operator-=(const df_interval_t& interval) {
         *this = *this - interval;
         return *this;
     }
@@ -467,16 +483,16 @@ public:
         return s;
     }
 
-    const char* c_str(const char* fmt = DEFAULT_FORMAT, char* buffer = DATE_FORMATTING_BUFFER, size_t buffer_size = DATE_FORMATTING_BUFFER_LENGTH) const {
+    const char* c_str(const char* fmt = DEFAULT_FORMAT, char* buffer = DF_DATE_FORMATTING_BUFFER, size_t buffer_size = DF_DATE_FORMATTING_BUFFER_LENGTH) const {
         struct tm* tm = localtime(&t);
         strftime(buffer, buffer_size, fmt, tm);
         return buffer;
     }
 
-    std::string to_string(const char* fmt = DEFAULT_FORMAT) const {
+    std::string& to_string(const char* fmt = DEFAULT_FORMAT) const {
         struct tm* tm = localtime(&t);
 
-        std::string s(DATE_FORMATTING_BUFFER_LENGTH, '\0');
+        std::string s(DF_DATE_FORMATTING_BUFFER_LENGTH, '\0');
         strftime(s.data(), s.capacity(), fmt, tm);
         return s;
     }
@@ -484,10 +500,10 @@ public:
 
     // == std::cout ==
 
-    friend std::ostream& operator<<(std::ostream& stream, const date_t date) {
+    friend std::ostream& operator<<(std::ostream& stream, const df_date_t date) {
         return stream << date.c_str();
     }
 };
 
 
-#endif // _DATE_HPP_
+#endif // _DF_DATE_HPP_
