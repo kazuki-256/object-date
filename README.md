@@ -7,6 +7,10 @@ to handle date by smart object in c++
 | version     | 1.2.1      |
 | last update | 2026-02-14 |
 
+## environments
+
+- Microsoft Visual Studio 18 2026
+
 ## features
 
 1. parse and format date
